@@ -4,6 +4,7 @@ const createRenderFn = require('../server/createRenderFn')
 exports.render = async function ({
   hash,
   pages,
+  ampTemplate,
   htmlTemplate,
   clientManifestPath,
   serverBundlePath,
@@ -20,6 +21,12 @@ exports.render = async function ({
     shouldPreload: regexpPreload ? file => regexpPreload.test(file) : null
   })
 
+  const ampRender = createRenderFn({
+    htmlTemplate: ampTemplate,
+    clientManifestPath,
+    serverBundlePath
+  })
+
   const length = pages.length
 
   for (let i = 0; i < length; i++) {
@@ -34,7 +41,7 @@ exports.render = async function ({
       state = JSON.parse(content)
     }
 
-    const html = await render(page, state, stateSize, hash)
+    const html = page.publicPath.includes('/amp/') ? await ampRender(page, state, stateSize, hash) : await render(page, state, stateSize, hash)
 
     await fs.outputFile(page.htmlOutput, html)
   }
